@@ -18,8 +18,8 @@ export default {
         datasets: [
           {
             label: 'Account Balance',
-            backgroundColor: '#C3D4FF',
-            borderColor: '#5081FF',
+            backgroundColor: '',
+            borderColor: '#fff',
             data: [10000, 20000, 40000, 70000, 90000, 100000, 120000],
           },
         ],

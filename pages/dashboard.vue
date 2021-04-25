@@ -27,11 +27,29 @@ export default {
   data() {
     return {}
   },
+  mounted() {
+    this.$buefy.toast.open({
+      message: 'Wallet Connected. Welcome',
+      type: 'is-success',
+    })
+  },
 }
 </script>
 <style scoped>
 #header {
-  background-color: #161d43;
+  /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#1e5799+0,2989d8+50,207cca+51,7db9e8+100;Blue+Gloss+Default */
+  /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#1e5799+29,2989d8+57,207cca+58,7db9e8+100 */
+  background: linear-gradient(
+    60deg,
+    #117aca,
+    #0090d6,
+    #00a5dc,
+    #00b9dd,
+    #16ccdc,
+    #59deda,
+    #86efd8,
+    #b0ffd9
+  );
 }
 
 #cross {

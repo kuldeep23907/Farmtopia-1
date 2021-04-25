@@ -1,28 +1,56 @@
 <template>
-  <section class="hero is-medium is-primary">
+  <section class="hero is-medium">
     <div class="hero-body">
       <div class="container">
-        <div class="columns is-align-items-center has-text-centered">
+        <div
+          class="columns is-align-items-center has-text-white has-text-centered"
+        >
           <div class="column">
             <h3>Current Balance</h3>
-            <h1 class="is-size-1">
+            <span class="is-size-1">
               ${{
-                this.balance.toFixed(10).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                this.balance
+                  .toFixed(10)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                  .split('.')[0]
               }}
-            </h1>
+            </span>
+            <span class="is-size-5 has-text-grey-lighter decimals">
+              .{{
+                this.balance
+                  .toFixed(10)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                  .split('.')[1]
+              }}
+            </span>
             <h3>Total Earnings</h3>
-            <h1 class="is-size-1">
-              ${{ this.yield.toFixed(10).replace(/\d(?=(\d{3})+\.)/g, '$&,') }}
-            </h1>
+            <span class="is-size-1">
+              ${{
+                this.yield
+                  .toFixed(10)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                  .split('.')[0]
+              }}
+            </span>
+            <span class="is-size-5 has-text-grey-lighter decimals">
+              .{{
+                this.yield
+                  .toFixed(10)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                  .split('.')[1]
+              }}
+            </span>
           </div>
           <div class="pa-6 column is-one-quarter">
             <h3>APY</h3>
             <h1 class="is-size-1">{{ this.apy }}%</h1>
-            <div class="mt-6 level">
-              <b-button class="mr-2 level-item" @click="openDeposit"
+            <div
+              class="mt-6 is-flex is-justify-content-center is-align-content-center level"
+            >
+              <b-button class="mr-1 level-item" @click="openDeposit"
                 >Deposit</b-button
               >
-              <b-button class="level-item" @click="openWithdrawl"
+              <b-button class="ml-1 level-item" @click="openWithdrawl"
                 >Withdraw</b-button
               >
             </div>
@@ -48,9 +76,9 @@ export default {
   components: { LineChart, Deposit, Withdraw },
   data() {
     return {
-      balance: 1000000,
+      balance: 1000000000,
       apy: 25,
-      yield: 4000,
+      yield: 0,
       withdrawlOpen: false,
     }
   },
@@ -94,5 +122,13 @@ export default {
 <style scoped>
 .chart-container {
   height: 400px;
+}
+
+.level-item {
+  border-radius: 50px;
+}
+
+.decimals {
+  margin-left: -13px;
 }
 </style>

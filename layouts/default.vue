@@ -4,7 +4,7 @@
       <template #brand>
         <b-navbar-item tag="router-link" :to="{ path: '/dashboard' }">
           <img
-            src="https://d33wubrfki0l68.cloudfront.net/9d0ffeb08eaade7f2bc1e0f8bd44c1e0a469248d/bafb4/static/21501e8dfa2f42d8260c096e21d8dbb4/aff26/hero.png"
+            src="~/assets/logo.png"
             alt="Lightweight UI components for Vue.js based on Bulma"
           />
           <strong> Farmtopia </strong>
