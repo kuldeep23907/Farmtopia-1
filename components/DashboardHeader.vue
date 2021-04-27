@@ -40,6 +40,14 @@
                   .split('.')[1]
               }}
             </span>
+            <h6 class="has-text-grey-lighter mt-2">Earnings per Second</h6>
+            <span class="is-size-5 has-text-text-white decimals">
+              ${{
+                this.earnedInterest
+                  .toFixed(10)
+                  .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+              }}
+            </span>
           </div>
           <div class="pa-6 column is-one-quarter">
             <h3>APY</h3>
@@ -62,8 +70,8 @@
         </div>
       </div>
     </div>
-    <withdraw ref="withdrawlmodal" />
-    <deposit ref="depositmodal" />
+    <withdraw :balance="balance" ref="withdrawlmodal" />
+    <deposit :balance="balance" ref="depositmodal" />
   </section>
 </template>
 
@@ -76,32 +84,46 @@ export default {
   components: { LineChart, Deposit, Withdraw },
   data() {
     return {
-      balance: 1000000000,
+      balance: 4500,
       apy: 25,
-      yield: 0,
+      yield: 120,
       withdrawlOpen: false,
+      earnedInterest: 0,
     }
   },
   mounted() {
+    ;(this.$nuxt || EventBus || this.$EventBus).$on(
+      'addToBalance',
+      this.addToBalance
+    )
+    ;(this.$nuxt || EventBus || this.$EventBus).$on(
+      'removeFromBalance',
+      this.removeFromBalance
+    )
+    ;(this.$nuxt || EventBus || this.$EventBus).$on(
+      'getBalance',
+      this.getBalance
+    )
+    this.earnedInterest = this.balance * (this.apy / 100 / 365 / 24 / 60 / 60)
     setInterval(() => {
       let balance = Number(this.balance)
       let apy = Number(this.apy)
-      let earnedInterest = balance * (apy / 100 / 365 / 24 / 60 / 60)
-      let newBalance = balance + earnedInterest
-      let newYield = Number(this.yield) + earnedInterest
+      this.earnedInterest = balance * (apy / 100 / 365 / 24 / 60 / 60)
+      let newBalance = balance + this.earnedInterest
+      let newYield = Number(this.yield) + this.earnedInterest
       this.balance = newBalance
       this.yield = newYield
-      this.emitUpdateTransaction([
-        {
-          id: (Math.random() * 100).toFixed(0),
-          date: new Date(),
-          transaction: {
-            name: 'Farmtopia Harvest',
-            type: 'Interest',
-            amount: earnedInterest,
-          },
-        },
-      ])
+      // this.emitUpdateTransaction([
+      //   {
+      //     id: (Math.random() * 100).toFixed(0),
+      //     date: new Date(),
+      //     transaction: {
+      //       name: 'Farmtopia Harvest',
+      //       type: 'Interest',
+      //       amount: this.earnedInterest,
+      //     },
+      //   },
+      // ])
     }, 1000)
   },
   methods: {
@@ -109,6 +131,37 @@ export default {
       ;(this.$nuxt || EventBus || this.$EventBus).$emit('updateTransactions', {
         message,
       })
+    },
+    addToBalance(balanceIncrement) {
+      this.balance = this.balance + Number(balanceIncrement.amount)
+      this.emitUpdateTransaction([
+        {
+          id: (Math.random() * 100).toFixed(0),
+          date: new Date(),
+          transaction: {
+            name: ethereum.selectedAddress,
+            type: 'Deposit',
+            amount: Number(balanceIncrement.amount),
+          },
+        },
+      ])
+    },
+    removeFromBalance(balanceDecrement) {
+      this.balance = this.balance - Number(balanceDecrement.amount)
+      this.emitUpdateTransaction([
+        {
+          id: (Math.random() * 100).toFixed(0),
+          date: new Date(),
+          transaction: {
+            name: ethereum.selectedAddress,
+            type: 'Withdraw',
+            amount: Number(balanceDecrement.amount),
+          },
+        },
+      ])
+    },
+    getBalance() {
+      return this.balance
     },
     openWithdrawl() {
       return this.$refs.withdrawlmodal.open()
@@ -130,5 +183,9 @@ export default {
 
 .decimals {
   margin-left: -13px;
+}
+
+.automargin {
+  margin-top: auto;
 }
 </style>

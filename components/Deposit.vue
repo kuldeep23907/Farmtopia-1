@@ -1,31 +1,85 @@
 <template>
   <b-modal v-model="isOpen" :width="640" scroll="keep">
-    <div class="card">
-      <div class="card-image">
-        <figure class="image is-4by3">
-          <img src="/static/img/placeholder-1280x960.png" alt="Image" />
-        </figure>
-      </div>
-      <div class="card-content">
-        <div class="media">
-          <div class="media-left">
-            <figure class="image is-48x48">
-              <img src="/static/img/placeholder-1280x960.png" alt="Image" />
-            </figure>
-          </div>
-          <div class="media-content">
-            <p class="title is-4">John Smith</p>
-            <p class="subtitle is-6">@johnsmith</p>
+    <div class="modal-background"></div>
+
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">{{ modalMessage }}</p>
+        <button @click="close" class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <b-steps v-model="stepLocation" :has-navigation="false">
+          <b-step-item
+            headerClass="has-text-black"
+            label="Deposit"
+            icon="account-key"
+          ></b-step-item>
+          <b-step-item
+            headerClass="has-text-black"
+            label="Confirm"
+            icon="account"
+          ></b-step-item>
+          <b-step-item
+            headerClass="has-text-black"
+            label="Success"
+            icon="account-plus"
+          ></b-step-item>
+        </b-steps>
+        <div v-if="stepLocation === 1" class="columns">
+          <div class="column" v-for="coin in stablecoins" :key="coin.name">
+            <img :src="coin.path" alt="" />
           </div>
         </div>
 
-        <div class="content">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-          iaculis mauris. <a>@bulmaio</a>. <a>#css</a> <a>#responsive</a>
-          <br />
-          <small>11:09 PM - 1 Jan 2016</small>
+        <div class="columns">
+          <div class="column">
+            <div v-if="stepLocation === 2" class="column is-full">
+              <h1 class="has-text-weight-bold is-size-3 has-text-success">
+                Deposit of ${{ depositAmount }} Successful.
+              </h1>
+              <a
+                v-if="stepLocation === 2"
+                :href="'https://rinkeby.etherscan.io/tx/' + depositId"
+              >
+                <p>
+                  {{
+                    ('https://rinkeby.etherscan.io/tx/' + depositId).substring(
+                      0,
+                      45
+                    ) + '............'
+                  }}
+                </p>
+              </a>
+            </div>
+            <div class="column input-group is-four-fifth">
+              <div class="columns">
+                <div class="column text-wrap is-four-fifth">
+                  <b-input
+                    v-if="(stepLocation === 0)"
+                    v-model="depositAmount"
+                    type="number"
+                    controls="false"
+                    min="5"
+                    :max="balance"
+                    :placeholder="
+                      'Max deposit: $' +
+                      balance
+                        .toFixed(10)
+                        .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                        .split('.')[0]
+                    "
+                  ></b-input>
+                </div>
+                <div class="column is-one-fifth">
+                  <b-button v-if="(stepLocation === 0)" @click="deposit"
+                    >Deposit</b-button
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   </b-modal>
 </template>
@@ -34,14 +88,104 @@ export default {
   data() {
     return {
       isOpen: false,
+      stepLocation: 0,
+      depositAmount: null,
+      balance: 10000000,
+      depositId: null,
+      stablecoins: [
+        {
+          name: 'dai',
+          path: '/logos/dai.png',
+          balance: 20,
+        },
+        {
+          name: 'tether',
+          path: '/logos/tether.png',
+          balance: 0,
+        },
+        {
+          name: 'usdc',
+          path: '/logos/usdc.png',
+          balance: 0,
+        },
+        {
+          name: 'eth',
+          path: '/logos/eth.png',
+          balance: 0,
+        },
+      ],
+      modalMessage: 'Select Your Deposit Amount',
     }
   },
   methods: {
     open() {
       this.isOpen = true
+      this.depositAmount = null
+      this.stepLocation = 0
+      this.modalMessage = 'Select Your Deposit Amount'
     },
     close() {
       this.isOpen = false
+    },
+    emitAddToBalance(amount) {
+      ;(this.$nuxt || EventBus || this.$EventBus).$emit('addToBalance', {
+        amount,
+      })
+    },
+    async deposit() {
+      if (this.depositAmount > 0 && this.depositAmount <= this.balance) {
+        let loading = this.$buefy.loading.open()
+        this.stepLocation = 1
+        this.modalMessage = 'Confirming your deposit......'
+        const transactionParameters = {
+          nonce: '0x00', // ignored by MetaMask
+          gasPrice: '0x09184e72a000', // customizable by user during MetaMask confirmation.
+          gas: '0x2710', // customizable by user during MetaMask confirmation.
+          to: '0xcCb43E3c1BA551a9B0D8E3d559f1be3EF7c6727c', // Required except during contract publications.
+          from: ethereum.selectedAddress, // must match user's active address.
+          value: this.depositAmount, // Only required to send ether to the recipient from the initiating external account.
+          data:
+            '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', // Optional, but used for defining smart contract creation and interaction.
+          chainId: '0x3', // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
+        }
+
+        // txHash is a hex string
+        // As with any RPC call, it may throw an error
+        const txHash = await ethereum
+          .request({
+            method: 'eth_sendTransaction',
+            params: [transactionParameters],
+          })
+          .then((result) => {
+            loading.close()
+            this.stepLocation = 2
+            this.modalMessage = 'Deposit Successful'
+
+            this.$buefy.toast.open({
+              message: 'Successful deposit of $' + this.depositAmount,
+              type: 'is-success',
+            })
+            console.log(result)
+            this.emitAddToBalance(this.depositAmount)
+            this.depositId = result
+          })
+          .catch((error) => {
+            loading.close()
+            console.log(error)
+            this.stepLocation = 0
+            this.modalMessage = 'Select Your Deposit Amount'
+
+            this.$buefy.toast.open({
+              message: error.message,
+              type: 'is-danger',
+            })
+          })
+      } else {
+        this.$buefy.toast.open({
+          message: 'Invalid deposit amount.',
+          type: 'is-danger',
+        })
+      }
     },
   },
 }

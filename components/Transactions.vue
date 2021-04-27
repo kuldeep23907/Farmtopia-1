@@ -61,7 +61,13 @@
             </b-table-column>
 
             <b-table-column label="Amount" v-slot="props">
-              <span> ${{ props.row.transaction.amount }} </span>
+              <span>
+                ${{
+                  props.row.transaction.amount
+                    .toFixed(2)
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                }}
+              </span>
             </b-table-column>
           </b-table>
         </div>
@@ -79,17 +85,7 @@ export default {
   },
   data() {
     return {
-      data: [
-        {
-          id: '3',
-          date: '2020-10-15 13:43:27',
-          transaction: {
-            name: 'Farmtopia Harvest',
-            type: 'Deposit',
-            amount: '100000',
-          },
-        },
-      ],
+      data: [],
     }
   },
   methods: {
