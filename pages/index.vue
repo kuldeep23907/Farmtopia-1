@@ -31,7 +31,7 @@
               </p>
 
               <h1 class="is-size-2 mt-6">
-                <strong>Earn up to 26% APY</strong>
+                <strong>Our Floating APY always stays on top of the market.</strong>
               </h1>
               <connect class="mt-6" />
             </div>
