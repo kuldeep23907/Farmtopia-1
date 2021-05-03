@@ -81,6 +81,8 @@
 </template>
 <script>
 import daiABI from '~/helpers/ERC20Abi.json'
+import fToken from '~/helpers/fToken.json'
+
 import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
 export default {
   props: {
@@ -128,14 +130,10 @@ export default {
       '0x59d141841328f89bf38672419655175f53740010'
     )
     this.fDaiInstance = new this.$web3.eth.Contract(
-      daiABI,
+      fToken.abi,
       '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
     )
 
-    this.farmtopiainterface = new this.$web3.eth.Contract(
-      farmtopiaInterface.abi,
-      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
-    )
     this.accountBalance = Number(
       (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
         Math.pow(10, 18)
@@ -164,22 +162,27 @@ export default {
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
 
-        let approvalProcess = await this.daiInstance.methods
-          .approve(
-            '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147',
-            String(this.withdrawAmount * Math.pow(10, 18))
-          )
-          .send({ from: this.isLoggedIn })
+        // let approvalProcess = await this.daiInstance.methods
+        //   .approve(
+        //     '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147',
+        //     String(this.withdrawAmount * Math.pow(10, 18))
+        //   )
+        //   .send({ from: this.isLoggedIn })
 
-        let allowedBalance = await this.daiInstance.methods
-          .allowance(
-            this.isLoggedIn,
-            '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
-          )
-          .call()
-        console.log(this.farmtopiainterface)
+        // let allowedBalance = await this.daiInstance.methods
+        //   .allowance(
+        //     this.isLoggedIn,
+        //     '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+        //   )
+        //   .call()
 
-        this.farmtopiainterface.methods
+        let farmtopiainterface = new this.$web3.eth.Contract(
+          farmtopiaInterface.abi,
+          '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+        )
+        console.log(farmtopiainterface)
+
+        farmtopiainterface.methods
           .withdraw(String(this.withdrawAmount * Math.pow(10, 18)))
           .send({ from: this.isLoggedIn })
           .then((result) => {
