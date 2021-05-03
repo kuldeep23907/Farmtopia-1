@@ -27,12 +27,7 @@ export default {
   data() {
     return {}
   },
-  mounted() {
-    this.$buefy.toast.open({
-      message: 'Wallet Connected. Welcome',
-      type: 'is-success',
-    })
-  },
+  mounted() {},
 }
 </script>
 <style scoped>

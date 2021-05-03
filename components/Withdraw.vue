@@ -35,7 +35,7 @@
                     v-model="withdrawAmount"
                     type="number"
                     controls="false"
-                    min="5"
+                    min="100"
                     :max="accountBalance"
                     :placeholder="
                       'Max Withdraw: $' +
@@ -53,12 +53,14 @@
                   </h1>
                   <a
                     v-if="stepLocation === 2"
-                    :href="'https://rinkeby.etherscan.io/tx/' + withdrawId"
+                    :href="
+                      'https://explorer.offchainlabs.com/#/tx' + withdrawId
+                    "
                   >
                     <p>
                       {{
                         (
-                          'https://rinkeby.etherscan.io/tx/' + withdrawId
+                          'https://explorer.offchainlabs.com/#/tx' + withdrawId
                         ).substring(0, 45) + '............'
                       }}
                     </p>
@@ -78,6 +80,8 @@
   </b-modal>
 </template>
 <script>
+import daiABI from '~/helpers/ERC20Abi.json'
+import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
 export default {
   props: {
     balance: Number,
@@ -114,9 +118,28 @@ export default {
       modalMessage: 'Select Your Withdraw Amount',
     }
   },
-  mounted() {
-    this.accountBalance = this.$emit('getBalance')
-    console.log(this.accountBalance)
+  async mounted() {
+    const accounts = await ethereum.request({ method: 'eth_accounts' })
+    //We take the first address in the array of addresses and display it
+    this.isLoggedIn = accounts[0]
+
+    this.daiInstance = new this.$web3.eth.Contract(
+      daiABI,
+      '0x59d141841328f89bf38672419655175f53740010'
+    )
+    this.fDaiInstance = new this.$web3.eth.Contract(
+      daiABI,
+      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+    )
+
+    this.farmtopiainterface = new this.$web3.eth.Contract(
+      farmtopiaInterface.abi,
+      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+    )
+    this.accountBalance = Number(
+      (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
+        Math.pow(10, 18)
+    )
   },
   methods: {
     open() {
@@ -136,29 +159,29 @@ export default {
     async withdraw() {
       if (
         this.withdrawAmount > 0 &&
-        this.withdrawAmount < this.accountBalance
+        this.withdrawAmount <= this.accountBalance
       ) {
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
-        const transactionParameters = {
-          nonce: '0x00', // ignored by MetaMask
-          gasPrice: '0x09184e72a000', // customizable by user during MetaMask confirmation.
-          gas: '0x2710', // customizable by user during MetaMask confirmation.
-          to: '0xcCb43E3c1BA551a9B0D8E3d559f1be3EF7c6727c', // Required except during contract publications.
-          from: ethereum.selectedAddress, // must match user's active address.
-          value: this.withdrawAmount, // Only required to send ether to the recipient from the initiating external account.
-          data:
-            '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', // Optional, but used for defining smart contract creation and interaction.
-          chainId: '0x3', // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
-        }
 
-        // txHash is a hex string
-        // As with any RPC call, it may throw an error
-        const txHash = await ethereum
-          .request({
-            method: 'eth_sendTransaction',
-            params: [transactionParameters],
-          })
+        let approvalProcess = await this.daiInstance.methods
+          .approve(
+            '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147',
+            String(this.withdrawAmount * Math.pow(10, 18))
+          )
+          .send({ from: this.isLoggedIn })
+
+        let allowedBalance = await this.daiInstance.methods
+          .allowance(
+            this.isLoggedIn,
+            '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+          )
+          .call()
+        console.log(this.farmtopiainterface)
+
+        this.farmtopiainterface.methods
+          .withdraw(String(this.withdrawAmount * Math.pow(10, 18)))
+          .send({ from: this.isLoggedIn })
           .then((result) => {
             loading.close()
             this.stepLocation = 2

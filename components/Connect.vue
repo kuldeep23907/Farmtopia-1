@@ -19,6 +19,13 @@ export default {
   },
   methods: {
     async connect() {
+      if (ethereum.networkVersion != '212984383488152') {
+        this.$buefy.toast.open({
+          message: 'Please connect to Arbitrum Network ',
+          type: 'is-warning',
+        })
+        return
+      }
       try {
         // Will open the MetaMask UI
         // You should disable this button while the request is pending!
@@ -72,6 +79,15 @@ export default {
         this.$router.push({
           path: '/',
         })
+      }
+    })
+    ethereum.on('chainChanged', (chainId) => {
+      if (chainId != '212984383488152') {
+        this.$router.push({
+          path: '/',
+        })
+
+        return
       }
     })
   },

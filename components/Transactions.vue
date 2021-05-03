@@ -36,7 +36,7 @@
               sortable
               v-slot="props"
             >
-              {{ props.row.transaction.name }}
+              {{ props.row.name }}
             </b-table-column>
 
             <b-table-column
@@ -45,7 +45,7 @@
               sortable
               v-slot="props"
             >
-              {{ props.row.transaction.type }}
+              {{ props.row.type }}
             </b-table-column>
 
             <b-table-column
@@ -63,9 +63,9 @@
             <b-table-column label="Amount" v-slot="props">
               <span>
                 ${{
-                  props.row.transaction.amount
+                  props.row.amount
                     .toFixed(2)
-                    .replace(/\d(?=(\d{3})+\.)/g, '$&,')
+                    .replace(/\d(?=(\d{3})+\.)/g, '$&,') || 'undefined'
                 }}
               </span>
             </b-table-column>
@@ -76,6 +76,8 @@
   </section>
 </template>
 <script>
+import daiABI from '~/helpers/ERC20Abi.json'
+
 export default {
   created() {
     ;(this.$nuxt || EventBus || this.$EventBus).$on(
@@ -83,14 +85,56 @@ export default {
       this.updateTable
     )
   },
+  async mounted() {
+    this.getDataFromContract()
+  },
   data() {
     return {
       data: [],
     }
   },
   methods: {
-    updateTable(array) {
-      this.data = this.data.concat(array.message)
+    updateTable() {
+      this.getDataFromContract()
+    },
+    async getDataFromContract() {
+      const accounts = await ethereum.request({ method: 'eth_accounts' })
+      //We take the first address in the array of addresses and display it
+      this.isLoggedIn = accounts[0]
+
+      this.fDaiInstance = new this.$web3.eth.Contract(
+        daiABI,
+        '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+      )
+
+      let transactions = await this.fDaiInstance
+        .getPastEvents(
+          'Transfer',
+          {
+            filter: {
+              to: accounts[0],
+            }, // Using an array means OR: e.g. 20 or 23
+            fromBlock: 167910,
+            toBlock: 'latest',
+          },
+          function (error, events) {
+            return events
+          }
+        )
+        .then(function (events) {
+          return events
+        })
+      let organizedTxs = []
+      transactions.map(function (tx) {
+        organizedTxs.push({
+          id: tx.id,
+          name: tx.returnValues.to,
+          type: tx.event,
+          date: tx.blockNumber,
+          amount: tx.returnValues.value / Math.pow(10, 18),
+        })
+      })
+      this.data = organizedTxs
     },
   },
 }

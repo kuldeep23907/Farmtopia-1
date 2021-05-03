@@ -37,16 +37,12 @@
               <h1 class="has-text-weight-bold is-size-3 has-text-success">
                 Deposit of ${{ depositAmount }} Successful.
               </h1>
-              <a
-                v-if="stepLocation === 2"
-                :href="'https://rinkeby.etherscan.io/tx/' + depositId"
-              >
+              <a :href="'https://explorer.offchainlabs.com/#/tx/' + depositId">
                 <p>
                   {{
-                    ('https://rinkeby.etherscan.io/tx/' + depositId).substring(
-                      0,
-                      45
-                    ) + '............'
+                    (
+                      'https://explorer.offchainlabs.com/#/tx/' + depositId
+                    ).substring(0, 45) + '............'
                   }}
                 </p>
               </a>
@@ -84,13 +80,36 @@
   </b-modal>
 </template>
 <script>
+import daiABI from '~/helpers/ERC20Abi.json'
+import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
+
 export default {
+  async mounted() {
+    const accounts = await ethereum.request({ method: 'eth_accounts' })
+    //We take the first address in the array of addresses and display it
+    this.isLoggedIn = accounts[0]
+
+    this.daiInstance = new this.$web3.eth.Contract(
+      daiABI,
+      '0x59d141841328f89bf38672419655175f53740010'
+    )
+    this.fDaiInstance = new this.$web3.eth.Contract(
+      daiABI,
+      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+    )
+    // var this.daiInstance = web3.eth
+    //
+    this.balance = Number(
+      (await this.daiInstance.methods.balanceOf(this.isLoggedIn).call()) /
+        Math.pow(10, 18)
+    )
+  },
   data() {
     return {
       isOpen: false,
       stepLocation: 0,
       depositAmount: null,
-      balance: 10000000,
+      balance: 0,
       depositId: null,
       stablecoins: [
         {
@@ -137,25 +156,26 @@ export default {
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
         this.modalMessage = 'Confirming your deposit......'
-        const transactionParameters = {
-          nonce: '0x00', // ignored by MetaMask
-          gasPrice: '0x09184e72a000', // customizable by user during MetaMask confirmation.
-          gas: '0x2710', // customizable by user during MetaMask confirmation.
-          to: '0xcCb43E3c1BA551a9B0D8E3d559f1be3EF7c6727c', // Required except during contract publications.
-          from: ethereum.selectedAddress, // must match user's active address.
-          value: this.depositAmount, // Only required to send ether to the recipient from the initiating external account.
-          data:
-            '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', // Optional, but used for defining smart contract creation and interaction.
-          chainId: '0x3', // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
-        }
+        let approvalProcess = await this.daiInstance.methods
+          .approve(
+            '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46',
+            String(this.depositAmount * Math.pow(10, 18))
+          )
+          .send({ from: this.isLoggedIn })
 
-        // txHash is a hex string
-        // As with any RPC call, it may throw an error
-        const txHash = await ethereum
-          .request({
-            method: 'eth_sendTransaction',
-            params: [transactionParameters],
-          })
+        let allowedBalance = await this.daiInstance.methods
+          .allowance(
+            this.isLoggedIn,
+            '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
+          )
+          .call()
+        let farmtopiainterface = new this.$web3.eth.Contract(
+          farmtopiaInterface.abi,
+          '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
+        )
+        farmtopiainterface.methods
+          .deposit(String(this.depositAmount * Math.pow(10, 18)))
+          .send({ from: this.isLoggedIn })
           .then((result) => {
             loading.close()
             this.stepLocation = 2
@@ -165,9 +185,9 @@ export default {
               message: 'Successful deposit of $' + this.depositAmount,
               type: 'is-success',
             })
-            console.log(result)
+            console.log('Results:', result)
             this.emitAddToBalance(this.depositAmount)
-            this.depositId = result
+            this.depositId = result.transactionHash
           })
           .catch((error) => {
             loading.close()
@@ -180,11 +200,6 @@ export default {
               type: 'is-danger',
             })
           })
-      } else {
-        this.$buefy.toast.open({
-          message: 'Invalid deposit amount.',
-          type: 'is-danger',
-        })
       }
     },
   },

@@ -79,19 +79,31 @@
 import Withdraw from '~/components/Withdraw'
 import Deposit from '~/components/Deposit'
 import LineChart from '~/components/LineChart'
+import daiABI from '~/helpers/ERC20Abi.json'
 
 export default {
   components: { LineChart, Deposit, Withdraw },
   data() {
     return {
-      balance: 4500,
+      balance: 0,
       apy: 25,
-      yield: 120,
+      yield: 0,
       withdrawlOpen: false,
       earnedInterest: 0,
     }
   },
-  mounted() {
+  async mounted() {
+    const accounts = await ethereum.request({ method: 'eth_accounts' })
+    //We take the first address in the array of addresses and display it
+    this.isLoggedIn = accounts[0]
+    this.fDaiInstance = new this.$web3.eth.Contract(
+      daiABI,
+      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+    )
+    this.balance = Number(
+      (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
+        Math.pow(10, 18)
+    )
     ;(this.$nuxt || EventBus || this.$EventBus).$on(
       'addToBalance',
       this.addToBalance
@@ -127,38 +139,26 @@ export default {
     }, 1000)
   },
   methods: {
-    emitUpdateTransaction(message) {
-      ;(this.$nuxt || EventBus || this.$EventBus).$emit('updateTransactions', {
-        message,
-      })
+    emitUpdateTransaction() {
+      ;(this.$nuxt || EventBus || this.$EventBus).$emit('updateTransactions')
     },
     addToBalance(balanceIncrement) {
       this.balance = this.balance + Number(balanceIncrement.amount)
-      this.emitUpdateTransaction([
-        {
-          id: (Math.random() * 100).toFixed(0),
-          date: new Date(),
-          transaction: {
-            name: ethereum.selectedAddress,
-            type: 'Deposit',
-            amount: Number(balanceIncrement.amount),
-          },
-        },
-      ])
+      this.emitUpdateTransaction()
     },
     removeFromBalance(balanceDecrement) {
       this.balance = this.balance - Number(balanceDecrement.amount)
-      this.emitUpdateTransaction([
-        {
-          id: (Math.random() * 100).toFixed(0),
-          date: new Date(),
-          transaction: {
-            name: ethereum.selectedAddress,
-            type: 'Withdraw',
-            amount: Number(balanceDecrement.amount),
-          },
-        },
-      ])
+      // this.emitUpdateTransaction([
+      //   {
+      //     id: (Math.random() * 100).toFixed(0),
+      //     date: new Date(),
+      //     transaction: {
+      //       name: ethereum.selectedAddress,
+      //       type: 'Withdraw',
+      //       amount: Number(balanceDecrement.amount),
+      //     },
+      //   },
+      // ])
     },
     getBalance() {
       return this.balance
