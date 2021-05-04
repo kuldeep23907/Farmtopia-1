@@ -178,7 +178,7 @@ export default {
 
         let farmtopiainterface = new this.$web3.eth.Contract(
           farmtopiaInterface.abi,
-          '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+          '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
         )
         console.log(farmtopiainterface)
 
