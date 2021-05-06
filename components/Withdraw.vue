@@ -54,13 +54,13 @@
                   <a
                     v-if="stepLocation === 2"
                     :href="
-                      'https://explorer.offchainlabs.com/#/tx' + withdrawId
+                      'https://explorer.offchainlabs.com/#/tx/' + withdrawId
                     "
                   >
                     <p>
                       {{
                         (
-                          'https://explorer.offchainlabs.com/#/tx' + withdrawId
+                          'https://explorer.offchainlabs.com/#/tx/' + withdrawId
                         ).substring(0, 45) + '............'
                       }}
                     </p>
