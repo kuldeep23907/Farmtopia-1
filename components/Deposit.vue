@@ -82,6 +82,7 @@
 <script>
 import daiABI from '~/helpers/ERC20Abi.json'
 import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
+import fTokenABI from '~/helpers/fToken.json'
 
 export default {
   async mounted() {
@@ -94,8 +95,13 @@ export default {
       '0x59d141841328f89bf38672419655175f53740010'
     )
     this.fDaiInstance = new this.$web3.eth.Contract(
-      daiABI,
-      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+      fTokenABI.abi,
+      '0xF80cFBbed73261E3802603aEDF76bDb25530d328'
+    )
+
+    this.farmtopiainterface = new this.$web3.eth.Contract(
+      farmtopiaInterface.abi,
+      '0xfE6a16D577854b6502d9b32B9683d0f56f3fA863'
     )
     // var this.daiInstance = web3.eth
     //
@@ -158,22 +164,16 @@ export default {
         this.modalMessage = 'Confirming your deposit......'
         let approvalProcess = await this.daiInstance.methods
           .approve(
-            '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46',
+            this.farmtopiainterface.options.address,
             String(this.depositAmount * Math.pow(10, 18))
           )
           .send({ from: this.isLoggedIn })
 
         let allowedBalance = await this.daiInstance.methods
-          .allowance(
-            this.isLoggedIn,
-            '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
-          )
+          .allowance(this.isLoggedIn, this.farmtopiainterface.options.address)
           .call()
-        let farmtopiainterface = new this.$web3.eth.Contract(
-          farmtopiaInterface.abi,
-          '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
-        )
-        farmtopiainterface.methods
+
+        this.farmtopiainterface.methods
           .deposit(String(this.depositAmount * Math.pow(10, 18)))
           .send({ from: this.isLoggedIn })
           .then((result) => {

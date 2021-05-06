@@ -79,7 +79,7 @@
 import Withdraw from '~/components/Withdraw'
 import Deposit from '~/components/Deposit'
 import LineChart from '~/components/LineChart'
-import daiABI from '~/helpers/ERC20Abi.json'
+import fTokenABI from '~/helpers/fToken.json'
 
 export default {
   components: { LineChart, Deposit, Withdraw },
@@ -97,9 +97,10 @@ export default {
     //We take the first address in the array of addresses and display it
     this.isLoggedIn = accounts[0]
     this.fDaiInstance = new this.$web3.eth.Contract(
-      daiABI,
-      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+      fTokenABI.abi,
+      '0xF80cFBbed73261E3802603aEDF76bDb25530d328'
     )
+    console.log('fToken Contract loaded on Dashboard', this.fDaiInstance)
     this.balance = Number(
       (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
         Math.pow(10, 18)
@@ -148,17 +149,7 @@ export default {
     },
     removeFromBalance(balanceDecrement) {
       this.balance = this.balance - Number(balanceDecrement.amount)
-      // this.emitUpdateTransaction([
-      //   {
-      //     id: (Math.random() * 100).toFixed(0),
-      //     date: new Date(),
-      //     transaction: {
-      //       name: ethereum.selectedAddress,
-      //       type: 'Withdraw',
-      //       amount: Number(balanceDecrement.amount),
-      //     },
-      //   },
-      // ])
+      this.emitUpdateTransaction()
     },
     getBalance() {
       return this.balance

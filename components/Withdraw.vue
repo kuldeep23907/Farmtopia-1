@@ -81,7 +81,7 @@
 </template>
 <script>
 import daiABI from '~/helpers/ERC20Abi.json'
-import fToken from '~/helpers/fToken.json'
+import fTokenABI from '~/helpers/fToken.json'
 
 import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
 export default {
@@ -130,8 +130,13 @@ export default {
       '0x59d141841328f89bf38672419655175f53740010'
     )
     this.fDaiInstance = new this.$web3.eth.Contract(
-      fToken.abi,
-      '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+      fTokenABI.abi,
+      '0xF80cFBbed73261E3802603aEDF76bDb25530d328'
+    )
+
+    this.farmtopiainterface = new this.$web3.eth.Contract(
+      farmtopiaInterface.abi,
+      '0xfE6a16D577854b6502d9b32B9683d0f56f3fA863'
     )
 
     this.accountBalance = Number(
@@ -162,27 +167,7 @@ export default {
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
 
-        // let approvalProcess = await this.daiInstance.methods
-        //   .approve(
-        //     '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147',
-        //     String(this.withdrawAmount * Math.pow(10, 18))
-        //   )
-        //   .send({ from: this.isLoggedIn })
-
-        // let allowedBalance = await this.daiInstance.methods
-        //   .allowance(
-        //     this.isLoggedIn,
-        //     '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
-        //   )
-        //   .call()
-
-        let farmtopiainterface = new this.$web3.eth.Contract(
-          farmtopiaInterface.abi,
-          '0x0876F852e337fc11ae0715F6ABd6b7Ed499a8F46'
-        )
-        console.log(farmtopiainterface)
-
-        farmtopiainterface.methods
+        var result = await this.farmtopiainterface.methods
           .withdraw(String(this.withdrawAmount * Math.pow(10, 18)))
           .send({ from: this.isLoggedIn })
           .then((result) => {
@@ -194,7 +179,7 @@ export default {
             })
             console.log(result)
             this.emitRemoveFromBalance(this.withdrawAmount)
-            this.withdrawId = result
+            this.withdrawId = result.transactionHash
           })
           .catch((error) => {
             loading.close()
@@ -210,7 +195,9 @@ export default {
           message: 'Invalid Withdraw amount.',
           type: 'is-danger',
         })
+        console.log(this.withdrawAmount, this.accountBalance)
       }
+      console.log('this func tion ran', result)
     },
   },
 }

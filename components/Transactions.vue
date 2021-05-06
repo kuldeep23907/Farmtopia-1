@@ -76,7 +76,7 @@
   </section>
 </template>
 <script>
-import daiABI from '~/helpers/ERC20Abi.json'
+import fTokenABI from '~/helpers/fToken.json'
 
 export default {
   created() {
@@ -103,8 +103,8 @@ export default {
       this.isLoggedIn = accounts[0]
 
       this.fDaiInstance = new this.$web3.eth.Contract(
-        daiABI,
-        '0xa8D9d33501Df73D5B534f70a2239EF8F526AB147'
+        fTokenABI.abi,
+        '0xF80cFBbed73261E3802603aEDF76bDb25530d328'
       )
 
       let transactions = await this.fDaiInstance
@@ -114,7 +114,7 @@ export default {
             filter: {
               to: accounts[0],
             }, // Using an array means OR: e.g. 20 or 23
-            fromBlock: 167910,
+            fromBlock: 0,
             toBlock: 'latest',
           },
           function (error, events) {
@@ -125,6 +125,7 @@ export default {
           return events
         })
       let organizedTxs = []
+      console.log(transactions.length, 'Total txs detected')
       transactions.map(function (tx) {
         organizedTxs.push({
           id: tx.id,
