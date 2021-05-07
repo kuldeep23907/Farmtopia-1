@@ -87,6 +87,7 @@ export default {
   },
   async mounted() {
     this.getDataFromContract()
+    console.log(this.$axios)
   },
   data() {
     return {

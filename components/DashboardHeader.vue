@@ -100,7 +100,19 @@ export default {
       fTokenABI.abi,
       '0xF80cFBbed73261E3802603aEDF76bDb25530d328'
     )
-    console.log('fToken Contract loaded on Dashboard', this.fDaiInstance)
+
+    const aave = await this.$axios.$get(
+      'https://api.zapper.fi/v1/lending-stats/aave?network=ethereum&api_key=96e0cc51-a62e-42ca-acee-910ea7d2a241'
+    )
+    this.aaveAPY = aave[1].supplyApy.toFixed(2) * 100
+
+    const compound = await this.$axios.$get(
+      'https://api.zapper.fi/v1/lending-stats/compound?network=ethereum&api_key=96e0cc51-a62e-42ca-acee-910ea7d2a241'
+    )
+    this.compoundAPY = compound[1].supplyApy.toFixed(2) * 100
+    this.apy = this.aaveAPY > this.compoundAPY ? this.aaveAPY : this.compoundAPY
+    console.log(this.apy)
+
     this.balance = Number(
       (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
         Math.pow(10, 18)
