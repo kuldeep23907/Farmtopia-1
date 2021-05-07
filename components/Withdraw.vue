@@ -49,7 +49,7 @@
                     class="has-text-weight-bold is-size-3 has-text-success"
                     v-if="stepLocation === 2"
                   >
-                    Withdraw of ${{ withdrawAmount }} Successful.
+                    ${{ withdrawAmount }} in transit. View Transaction
                   </h1>
                   <a
                     v-if="stepLocation === 2"
@@ -169,26 +169,33 @@ export default {
 
         var result = await this.farmtopiainterface.methods
           .withdraw(String(this.withdrawAmount * Math.pow(10, 18)))
-          .send({ from: this.isLoggedIn })
+          .send({ from: this.isLoggedIn }, (error, result) => {
+            if (error) {
+              loading.close()
+              console.log(error)
+              this.stepLocation = 0
+              this.$buefy.toast.open({
+                message: error.message,
+                type: 'is-danger',
+              })
+            }
+            if (result) {
+              loading.close()
+              this.stepLocation = 2
+              this.$buefy.toast.open({
+                message: 'Successful Withdraw of $' + this.withdrawAmount,
+                type: 'is-success',
+              })
+              console.log(result)
+              this.withdrawId = result
+            }
+          })
           .then((result) => {
-            loading.close()
-            this.stepLocation = 2
             this.$buefy.toast.open({
               message: 'Successful Withdraw of $' + this.withdrawAmount,
               type: 'is-success',
             })
-            console.log(result)
             this.emitRemoveFromBalance(this.withdrawAmount)
-            this.withdrawId = result.transactionHash
-          })
-          .catch((error) => {
-            loading.close()
-            console.log(error)
-            this.stepLocation = 0
-            this.$buefy.toast.open({
-              message: error.message,
-              type: 'is-danger',
-            })
           })
       } else {
         this.$buefy.toast.open({
@@ -197,7 +204,6 @@ export default {
         })
         console.log(this.withdrawAmount, this.accountBalance)
       }
-      console.log('this func tion ran', result)
     },
   },
 }

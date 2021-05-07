@@ -1,7 +1,12 @@
 <template>
-  <b-button v-if="checkWeb3" @click="connect">
-    {{ this.isLoggedIn ? this.truncateAddress(this.isLoggedIn) : 'Connect' }}
-  </b-button>
+  <div>
+    <b-button v-if="checkMetaMask" @click="connect">
+      {{ this.isLoggedIn ? this.truncateAddress(this.isLoggedIn) : 'Connect' }}
+    </b-button>
+    <a v-if="!checkMetaMask" href="https://metamask.io/download.html"
+      ><h1>Install Metamask</h1></a
+    >
+  </div>
 </template>
 <script>
 export default {
@@ -12,9 +17,11 @@ export default {
     }
   },
   computed: {
-    checkWeb3() {
-      const { ethereum } = window
-      return Boolean(ethereum && ethereum.isMetaMask)
+    checkMetaMask() {
+      if (ethereum) {
+        const { ethereum } = window
+        return Boolean(ethereum && ethereum.isMetaMask)
+      }
     },
   },
   methods: {
@@ -65,31 +72,34 @@ export default {
     },
   },
   async mounted() {
-    this.isMetaMask = this.checkWeb3
-    this.isLoggedIn = await this.getAccounts()
-    ethereum.on('accountsChanged', async (accounts) => {
+    if (ethereum) {
       this.isLoggedIn = await this.getAccounts()
-      if (this.isLoggedIn.length > 0) {
-        console.log('User logged in, going to dashboard')
-        this.$router.push({
-          path: '/dashboard',
-        })
-      } else {
-        console.log('User logged out, going to home')
-        this.$router.push({
-          path: '/',
-        })
-      }
-    })
-    ethereum.on('chainChanged', (chainId) => {
-      if (chainId != '212984383488152') {
-        this.$router.push({
-          path: '/',
-        })
+      ethereum.on('accountsChanged', async (accounts) => {
+        this.isLoggedIn = await this.getAccounts()
+        if (this.isLoggedIn.length > 0) {
+          console.log('User logged in, going to dashboard')
+          this.$router.push({
+            path: '/dashboard',
+          })
+          this.$router.go()
+        } else {
+          console.log('User logged out, going to home')
+          this.$router.push({
+            path: '/',
+          })
+        }
+      })
+      ethereum.on('chainChanged', (chainId) => {
+        if (chainId != '212984383488152') {
+          this.$router.push({
+            path: '/',
+          })
+          this.$router.go()
 
-        return
-      }
-    })
+          return
+        }
+      })
+    }
   },
 }
 </script>

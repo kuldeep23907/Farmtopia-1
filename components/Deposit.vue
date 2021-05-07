@@ -158,47 +158,70 @@ export default {
       })
     },
     async deposit() {
+      var dai = this.daiInstance
+      var fToken = this.fDaiInstance
+      var farmtopia = this.farmtopiainterface
+      var account = this.isLoggedIn
+
       if (this.depositAmount > 0 && this.depositAmount <= this.balance) {
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
-        this.modalMessage = 'Confirming your deposit......'
-        let approvalProcess = await this.daiInstance.methods
+        this.modalMessage = 'Waiting for Approval to Transfer Funds...'
+        console.log(dai, '1')
+        await dai.methods
           .approve(
-            this.farmtopiainterface.options.address,
+            farmtopia.options.address,
             String(this.depositAmount * Math.pow(10, 18))
           )
-          .send({ from: this.isLoggedIn })
+          .send({ from: this.isLoggedIn }, (error, result) => {
+            if (error) {
+              console.log('Approval Failed', error)
+            } else {
+              console.log('Approval Passed', result)
+              this.$buefy.toast.open({
+                message: 'Transaction Approved',
+                type: 'is-success',
+              })
+              this.modalMessage = 'Confirming Transaction...'
 
-        let allowedBalance = await this.daiInstance.methods
-          .allowance(this.isLoggedIn, this.farmtopiainterface.options.address)
-          .call()
+              // dai.methods
+              //   .allowance(account, farmtopia.options.address)
+              //   .call({}, function (error, result) {
+              //     if (error) {
+              //       console.log('Approval Failed', error)
+              //     } else {
+              //       console.log('Approval Passed', result)
+              //     }
+              //   })
+              farmtopia.methods
+                .deposit(String(this.depositAmount * Math.pow(10, 18)))
+                .send({ from: this.isLoggedIn }, (error, result) => {
+                  if (error) {
+                    loading.close()
+                    console.log(error)
+                    this.stepLocation = 0
+                    this.modalMessage = 'Select Your Deposit Amount'
 
-        this.farmtopiainterface.methods
-          .deposit(String(this.depositAmount * Math.pow(10, 18)))
-          .send({ from: this.isLoggedIn })
-          .then((result) => {
-            loading.close()
-            this.stepLocation = 2
-            this.modalMessage = 'Deposit Successful'
+                    this.$buefy.toast.open({
+                      message: error.message,
+                      type: 'is-danger',
+                    })
+                  }
+                  if (result) {
+                    loading.close()
+                    this.stepLocation = 2
+                    this.modalMessage = 'Deposit Successful'
 
-            this.$buefy.toast.open({
-              message: 'Successful deposit of $' + this.depositAmount,
-              type: 'is-success',
-            })
-            console.log('Results:', result)
-            this.emitAddToBalance(this.depositAmount)
-            this.depositId = result.transactionHash
-          })
-          .catch((error) => {
-            loading.close()
-            console.log(error)
-            this.stepLocation = 0
-            this.modalMessage = 'Select Your Deposit Amount'
-
-            this.$buefy.toast.open({
-              message: error.message,
-              type: 'is-danger',
-            })
+                    this.$buefy.toast.open({
+                      message: 'Successful deposit of $' + this.depositAmount,
+                      type: 'is-success',
+                    })
+                    console.log('Results:', result)
+                    this.emitAddToBalance(this.depositAmount)
+                    this.depositId = result
+                  }
+                })
+            }
           })
       }
     },
