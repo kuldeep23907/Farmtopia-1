@@ -35,7 +35,7 @@
           <div class="column">
             <div v-if="stepLocation === 2" class="column is-full">
               <h1 class="has-text-weight-bold is-size-3 has-text-success">
-                Deposit of ${{ depositAmount }} Successful.
+                ${{ depositAmount }} in Transit. View Transaction
               </h1>
               <a :href="'https://explorer.offchainlabs.com/#/tx/' + depositId">
                 <p>
@@ -159,9 +159,9 @@ export default {
     },
     async deposit() {
       var dai = this.daiInstance
-      var fToken = this.fDaiInstance
+      // var fToken = this.fDaiInstance
       var farmtopia = this.farmtopiainterface
-      var account = this.isLoggedIn
+      // var account = this.isLoggedIn
 
       if (this.depositAmount > 0 && this.depositAmount <= this.balance) {
         let loading = this.$buefy.loading.open()
@@ -197,31 +197,54 @@ export default {
                 .deposit(String(this.depositAmount * Math.pow(10, 18)))
                 .send({ from: this.isLoggedIn }, (error, result) => {
                   if (error) {
-                    loading.close()
-                    console.log(error)
-                    this.stepLocation = 0
-                    this.modalMessage = 'Select Your Deposit Amount'
-
-                    this.$buefy.toast.open({
-                      message: error.message,
-                      type: 'is-danger',
-                    })
+                    // loading.close()
+                    // console.log(error.message)
+                    // this.stepLocation = 0
+                    // this.modalMessage = 'Select Your Deposit Amount'
+                    // this.$buefy.toast.open({
+                    //   message: error.message,
+                    //   type: 'is-danger',
+                    // })
                   }
                   if (result) {
                     loading.close()
                     this.stepLocation = 2
-                    this.modalMessage = 'Deposit Successful'
-
-                    this.$buefy.toast.open({
-                      message: 'Successful deposit of $' + this.depositAmount,
-                      type: 'is-success',
-                    })
-                    console.log('Results:', result)
-                    this.emitAddToBalance(this.depositAmount)
+                    this.modalMessage = 'Deposit Pending.....'
                     this.depositId = result
                   }
                 })
+                .then((result) => {
+                  this.$buefy.toast.open({
+                    message: 'Successful deposit of $' + this.depositAmount,
+                    type: 'is-success',
+                  })
+                  console.log('Results:', result)
+                  this.emitAddToBalance(this.depositAmount)
+                  this.modalMessage = 'Deposit Successful'
+                })
+                .catch((e) => {
+                  loading.close()
+                  console.log(e.message)
+                  this.stepLocation = 0
+                  this.modalMessage = 'Select Your Deposit Amount'
+
+                  this.$buefy.toast.open({
+                    message: e.message,
+                    type: 'is-danger',
+                  })
+                })
             }
+          })
+          .catch((e) => {
+            loading.close()
+            console.log(e.message)
+            this.stepLocation = 0
+            this.modalMessage = 'Select Your Deposit Amount'
+
+            this.$buefy.toast.open({
+              message: e.message,
+              type: 'is-danger',
+            })
           })
       }
     },

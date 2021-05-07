@@ -164,6 +164,8 @@ export default {
         this.withdrawAmount > 0 &&
         this.withdrawAmount <= this.accountBalance
       ) {
+        this.modalMessage = 'Waiting for confirmation.....'
+
         let loading = this.$buefy.loading.open()
         this.stepLocation = 1
 
@@ -171,22 +173,11 @@ export default {
           .withdraw(String(this.withdrawAmount * Math.pow(10, 18)))
           .send({ from: this.isLoggedIn }, (error, result) => {
             if (error) {
-              loading.close()
-              console.log(error)
-              this.stepLocation = 0
-              this.$buefy.toast.open({
-                message: error.message,
-                type: 'is-danger',
-              })
             }
             if (result) {
               loading.close()
               this.stepLocation = 2
-              this.$buefy.toast.open({
-                message: 'Successful Withdraw of $' + this.withdrawAmount,
-                type: 'is-success',
-              })
-              console.log(result)
+              this.modalMessage = 'Withdraw Pending.....'
               this.withdrawId = result
             }
           })
@@ -195,7 +186,18 @@ export default {
               message: 'Successful Withdraw of $' + this.withdrawAmount,
               type: 'is-success',
             })
+            console.log('Results:', result)
             this.emitRemoveFromBalance(this.withdrawAmount)
+            this.modalMessage = 'Withdraw Successful'
+          })
+          .catch((e) => {
+            loading.close()
+            console.log(e)
+            this.stepLocation = 0
+            this.$buefy.toast.open({
+              message: e.message,
+              type: 'is-danger',
+            })
           })
       } else {
         this.$buefy.toast.open({
