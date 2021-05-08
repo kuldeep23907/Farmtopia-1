@@ -6,8 +6,13 @@
           class="columns is-align-items-center has-text-white has-text-centered"
         >
           <div class="column">
-            <h3>Current Balance</h3>
-            <span class="is-size-1">
+            <h3 class="animate__animated animate__fadeInDown">
+              Current Balance
+            </h3>
+            <span
+              v-if="balanceLoaded"
+              class="is-size-1 animate__animated animate__fadeInDown"
+            >
               ${{
                 this.balance
                   .toFixed(10)
@@ -15,7 +20,10 @@
                   .split('.')[0]
               }}
             </span>
-            <span class="is-size-5 has-text-grey-lighter decimals">
+            <span
+              v-if="balanceLoaded"
+              class="is-size-5 has-text-grey-lighter decimals animate__animated animate__fadeInDown"
+            >
               .{{
                 this.balance
                   .toFixed(10)
@@ -23,8 +31,12 @@
                   .split('.')[1]
               }}
             </span>
-            <h3>Total Earnings</h3>
-            <span class="is-size-1">
+
+            <b-loading :active="!balanceLoaded" :can-cancel="true"></b-loading>
+            <h3 class="animate__animated animate__fadeInDown">
+              Total Earnings
+            </h3>
+            <span v-if="balanceLoaded" class="is-size-1">
               ${{
                 this.yield
                   .toFixed(10)
@@ -32,7 +44,10 @@
                   .split('.')[0]
               }}
             </span>
-            <span class="is-size-5 has-text-grey-lighter decimals">
+            <span
+              v-if="balanceLoaded"
+              class="is-size-5 has-text-grey-lighter decimals animate__animated animate__fadeInDown"
+            >
               .{{
                 this.yield
                   .toFixed(10)
@@ -40,8 +55,15 @@
                   .split('.')[1]
               }}
             </span>
-            <h6 class="has-text-grey-lighter mt-2">Earnings per Second</h6>
-            <span class="is-size-5 has-text-text-white decimals">
+            <h6
+              class="has-text-grey-lighter mt-2 animate__animated animate__fadeInDown"
+            >
+              Earnings per Second
+            </h6>
+            <span
+              v-if="balanceLoaded"
+              class="is-size-5 has-text-text-white decimals animate__animated animate__fadeInDown"
+            >
               ${{
                 this.earnedInterest
                   .toFixed(10)
@@ -50,20 +72,28 @@
             </span>
           </div>
           <div class="pa-6 column is-one-quarter">
-            <h3>APY</h3>
-            <h1 class="is-size-1">{{ this.apy.toFixed(2) }}%</h1>
+            <h3 class="animate__animated animate__fadeInDown">APY</h3>
+            <h1 class="is-size-1 animate__animated animate__fadeInDown">
+              {{ this.apy.toFixed(2) }}%
+            </h1>
             <div
               class="mt-6 is-flex is-justify-content-center is-align-content-center level"
             >
-              <b-button class="mr-1 level-item" @click="openDeposit"
+              <b-button
+                class="mr-1 level-item animate__animated animate__fadeInUp"
+                @click="openDeposit"
                 >Deposit</b-button
               >
-              <b-button class="ml-1 level-item" @click="openWithdrawl"
+              <b-button
+                class="ml-1 level-item animate__animated animate__fadeInUp"
+                @click="openWithdrawl"
                 >Withdraw</b-button
               >
             </div>
           </div>
-          <div class="column chart-container is-three-fifth">
+          <div
+            class="column animate__animated animate__fadeInDown chart-container is-three-fifth"
+          >
             Historical Chart
             <line-chart />
           </div>
@@ -90,6 +120,7 @@ export default {
       yield: 0,
       withdrawlOpen: false,
       earnedInterest: 0,
+      balanceLoaded: false,
     }
   },
   async mounted() {
@@ -117,6 +148,7 @@ export default {
       (await this.fDaiInstance.methods.balanceOf(this.isLoggedIn).call()) /
         Math.pow(10, 18)
     )
+    this.balanceLoaded = true
     ;(this.$nuxt || EventBus || this.$EventBus).$on(
       'addToBalance',
       this.addToBalance
