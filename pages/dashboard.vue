@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="metamask">
     <div id="header" class="hero-body">
       <div class="columns">
         <div class="column">
@@ -28,6 +28,9 @@ export default {
     return {}
   },
   mounted() {},
+  created() {
+    this.metamask = ethereum
+  },
 }
 </script>
 <style scoped>

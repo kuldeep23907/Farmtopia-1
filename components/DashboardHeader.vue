@@ -51,7 +51,7 @@
           </div>
           <div class="pa-6 column is-one-quarter">
             <h3>APY</h3>
-            <h1 class="is-size-1">{{ this.apy }}%</h1>
+            <h1 class="is-size-1">{{ this.apy.toFixed(2) }}%</h1>
             <div
               class="mt-6 is-flex is-justify-content-center is-align-content-center level"
             >
@@ -86,7 +86,7 @@ export default {
   data() {
     return {
       balance: 0,
-      apy: 25,
+      apy: 0,
       yield: 0,
       withdrawlOpen: false,
       earnedInterest: 0,
