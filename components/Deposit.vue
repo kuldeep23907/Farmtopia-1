@@ -193,47 +193,49 @@ export default {
               //       console.log('Approval Passed', result)
               //     }
               //   })
-              farmtopia.methods
-                .deposit(String(this.depositAmount * Math.pow(10, 18)))
-                .send({ from: this.isLoggedIn }, (error, result) => {
-                  if (error) {
-                    // loading.close()
-                    // console.log(error.message)
-                    // this.stepLocation = 0
-                    // this.modalMessage = 'Select Your Deposit Amount'
-                    // this.$buefy.toast.open({
-                    //   message: error.message,
-                    //   type: 'is-danger',
-                    // })
-                  }
-                  if (result) {
-                    loading.close()
-                    this.stepLocation = 2
-                    this.modalMessage = 'Deposit Pending.....'
-                    this.depositId = result
-                  }
-                })
-                .then((result) => {
-                  this.$buefy.toast.open({
-                    message: 'Successful deposit of $' + this.depositAmount,
-                    type: 'is-success',
-                  })
-                  console.log('Results:', result)
-                  this.emitAddToBalance(this.depositAmount)
-                  this.modalMessage = 'Deposit Successful'
-                })
-                .catch((e) => {
-                  loading.close()
-                  console.log(e.message)
-                  this.stepLocation = 0
-                  this.modalMessage = 'Select Your Deposit Amount'
-
-                  this.$buefy.toast.open({
-                    message: e.message,
-                    type: 'is-danger',
-                  })
-                })
             }
+          })
+          .then((r) => {
+            farmtopia.methods
+              .deposit(String(this.depositAmount * Math.pow(10, 18)))
+              .send({ from: this.isLoggedIn }, (error, result) => {
+                if (error) {
+                  // loading.close()
+                  // console.log(error.message)
+                  // this.stepLocation = 0
+                  // this.modalMessage = 'Select Your Deposit Amount'
+                  // this.$buefy.toast.open({
+                  //   message: error.message,
+                  //   type: 'is-danger',
+                  // })
+                }
+                if (result) {
+                  loading.close()
+                  this.stepLocation = 2
+                  this.modalMessage = 'Deposit Pending.....'
+                  this.depositId = result
+                }
+              })
+              .then((result) => {
+                this.$buefy.toast.open({
+                  message: 'Successful deposit of $' + this.depositAmount,
+                  type: 'is-success',
+                })
+                console.log('Results:', result)
+                this.emitAddToBalance(this.depositAmount)
+                this.modalMessage = 'Deposit Successful'
+              })
+              .catch((e) => {
+                loading.close()
+                console.log(e.message)
+                this.stepLocation = 0
+                this.modalMessage = 'Select Your Deposit Amount'
+
+                this.$buefy.toast.open({
+                  message: e.message,
+                  type: 'is-danger',
+                })
+              })
           })
           .catch((e) => {
             loading.close()
