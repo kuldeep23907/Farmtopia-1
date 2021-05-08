@@ -4,7 +4,7 @@
       {{ this.isLoggedIn ? this.truncateAddress(this.isLoggedIn) : 'Connect' }}
     </b-button>
     <a v-if="!checkMetaMask" href="https://metamask.io/download.html"
-      ><h1>Install Metamask</h1></a
+      ><b-button>Install Metamask To Continue</b-button></a
     >
   </div>
 </template>
@@ -18,7 +18,7 @@ export default {
   },
   computed: {
     checkMetaMask() {
-      if (ethereum) {
+      if (window.ethereum) {
         const { ethereum } = window
         return Boolean(ethereum && ethereum.isMetaMask)
       }
@@ -72,7 +72,7 @@ export default {
     },
   },
   async mounted() {
-    if (ethereum) {
+    if (window.ethereum) {
       this.isLoggedIn = await this.getAccounts()
       ethereum.on('accountsChanged', async (accounts) => {
         this.isLoggedIn = await this.getAccounts()
