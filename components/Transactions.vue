@@ -14,31 +14,14 @@
           <br />
           <b-table
             :data="data"
-            default-sort="transaction.date"
+            :default-sort="['date', 'desc']"
             aria-next-label="Next page"
             aria-previous-label="Previous page"
             aria-page-label="Page"
+            :loading="loading"
             aria-current-label="Current page"
+            default-sort-direction="desc"
           >
-            <b-table-column
-              field="id"
-              label="ID"
-              sortable
-              numeric
-              v-slot="props"
-            >
-              {{ props.row.id }}
-            </b-table-column>
-
-            <b-table-column
-              field="transaction.name"
-              label="Name"
-              sortable
-              v-slot="props"
-            >
-              {{ props.row.name }}
-            </b-table-column>
-
             <b-table-column
               field="transaction.type"
               label="Type"
@@ -92,6 +75,7 @@ export default {
   data() {
     return {
       data: [],
+      loading: true,
     }
   },
   methods: {
@@ -110,7 +94,7 @@ export default {
 
       let transactions = await this.fDaiInstance
         .getPastEvents(
-          'Transfer',
+          'mintOnDepositEvent',
           {
             filter: {
               to: accounts[0],
@@ -125,18 +109,56 @@ export default {
         .then(function (events) {
           return events
         })
+      let transactionsFrom = await this.fDaiInstance
+        .getPastEvents(
+          'burnOnWithdrawEvent',
+          {
+            filter: {
+              to: accounts[0],
+            }, // Using an array means OR: e.g. 20 or 23
+            fromBlock: 0,
+            toBlock: 'latest',
+          },
+          function (error, events) {
+            return events
+          }
+        )
+        .then(function (events) {
+          return events
+        })
+
+      transactions = transactions.concat(transactionsFrom)
+      console.log(transactions, 'All')
+
       let organizedTxs = []
+      let amount
       console.log(transactions.length, 'Total txs detected')
-      transactions.map(function (tx) {
+      transactions.map(async (tx) => {
+        var date = await this.$web3.eth
+          .getBlock(tx.blockNumber)
+          .then((result) => {
+            return result.timestamp
+          })
+
+        if (tx.event === 'burnOnWithdrawEvent') {
+          tx.event = 'Withdraw'
+          amount = tx.returnValues.fTokensAmount
+        }
+        if (tx.event === 'mintOnDepositEvent') {
+          tx.event = 'Deposit'
+          amount = tx.returnValues.amount
+        }
+
         organizedTxs.push({
           id: tx.id,
           name: tx.returnValues.to,
           type: tx.event,
-          date: tx.blockNumber,
-          amount: tx.returnValues.value / Math.pow(10, 18),
+          amount: amount / Math.pow(10, 18),
+          date: new Date(date * 1000).toLocaleDateString('en-US'),
         })
       })
       this.data = organizedTxs
+      this.loading = false
     },
   },
 }
