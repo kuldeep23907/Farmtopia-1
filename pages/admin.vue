@@ -13,8 +13,9 @@
     <h1>Rebalance</h1>
     <span
       ><b-button @click="rebalanceL1"></b-button
-      ><b-input v-model="rebalanceSendingAmount"></b-input
-    ></span>
+      ><b-input v-model="rebalanceSendingAmount"></b-input>
+      <b-button @click="finalizeWithdrawal">Fast withdrawal</b-button>
+    </span>
   </div>
 </template>
 
@@ -66,8 +67,8 @@ export default {
       }
 
       this.tokenBridgeL1.methods.fastWithdrawalFromL2(
-        // liquidityProvider,
-        // liquidityProof,
+        '0xfeD77707A7d4e1eF912c5fAF2109C4991c332204',
+        '',
         this.withdrawalData.initialDestination,
         this.withdrawalData.erc20,
         this.withdrawalData.amount,
