@@ -69,11 +69,9 @@ export default {
       this.tokenBridgeL1.methods.fastWithdrawalFromL2(
         '0xfeD77707A7d4e1eF912c5fAF2109C4991c332204',
         '',
-        this.withdrawalData.initialDestination,
         this.withdrawalData.erc20,
         this.withdrawalData.amount,
         this.withdrawalData.exitNum,
-        0
       )
       .send({ from: this.loggedInAccount })
       .then(receipt => {
