@@ -21,6 +21,8 @@
 <script>
 import farmtopiaInterface from '~/helpers/FarmtopiaInterface.json'
 import fTokenABI from '~/helpers/fToken.json'
+import tokenBridge from '~/helpers/EthERC20Bridge.json'
+
 export default {
   name: 'Admin',
   layout: 'admin',
@@ -45,9 +47,39 @@ export default {
         .send({ from: this.loggedInAccount })
         .then((result) => {
           console.log(result)
+
+          var withdrawEvent = result.events.WithdrawToken.returnValues;
+
+          this.withdrawalData = {
+            initialDestination: withdrawEvent.destination,
+            erc20: '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa', // DAI token address on Kovan
+            amount: withdrawEvent.amount,
+            exitNum: withdrawEvent.exitNum,
+          }
           return result
         })
     },
+    finalizeWithdrawal() {
+
+      if (this.withdrawalData == null) {
+        console.error("Rebalancing was not initiated")
+      }
+
+      this.tokenBridgeL1.methods.fastWithdrawalFromL2(
+        // liquidityProvider,
+        // liquidityProof,
+        this.withdrawalData.initialDestination,
+        this.withdrawalData.erc20,
+        this.withdrawalData.amount,
+        this.withdrawalData.exitNum,
+        0
+      )
+      .send({ from: this.loggedInAccount })
+      .then(receipt => {
+        console.log('Accelerated withdrawal initiated')
+        console.log(receipt)
+      })
+    }
   },
   async beforeMount() {},
 
@@ -61,6 +93,11 @@ export default {
     this.farmtopiainterface = new this.$web3.eth.Contract(
       farmtopiaInterface.abi,
       '0xfE6a16D577854b6502d9b32B9683d0f56f3fA863'
+    )
+
+    this.tokenBridgeL1 = new this.$web3.eth.Contract(
+      tokenBridge.abi,
+      tokenBridge.networks['42'].address
     )
 
     const accounts = await ethereum.request({ method: 'eth_accounts' })
